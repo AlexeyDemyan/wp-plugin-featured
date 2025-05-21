@@ -23,17 +23,44 @@ wp.blocks.registerBlockType('ourplugin/featured-professor', {
 function EditComponent(props) {
   const [preview, setPreview] = useState('');
   useEffect(() => {
-    async function go() {
-      const response = await apiFetch({
-        path: `/featuredProfessor/v1/getHTML?profId=${props.attributes.profId}`,
-        method: 'GET',
-      });
-      setPreview(response);
+    // wrapping it in condition to make sure nothing renders when we first add the block:
+    if (props.attributes.profId) {
+      updateMetaData();
+
+      async function go() {
+        const response = await apiFetch({
+          path: `/featuredProfessor/v1/getHTML?profId=${props.attributes.profId}`,
+          method: 'GET',
+        });
+        setPreview(response);
+      }
+      go();
     }
-    go();
   }, [props.attributes.profId]);
 
-  console.log(preview);
+  useEffect(() => {
+    // Returninig a cleanup function, where we call update function once component unmounts
+    return () => {
+      updateMetaData();
+    };
+  }, []);
+
+  function updateMetaData() {
+    // getting all blocks within the Editor, filtering to only get the Plugin blocks
+    // And then using map to basically extract profId values only
+    const profsForMeta = wp.data
+      .select('core/editor')
+      .getBlocks()
+      .filter((block) => block.name == 'ourplugin/featured-professor')
+      .map((block) => block.attributes.profId);
+
+    // There is also an argument to remove duplicates from the profsForMeta
+    // But it seems a bit of an edge-case overkill
+
+    wp.data
+      .dispatch('core/editor')
+      .editPost({ meta: { featuredProfessor: profsForMeta } });
+  }
 
   const allProfs = useSelect((select) => {
     return select('core').getEntityRecords('postType', 'professor', {
@@ -64,7 +91,7 @@ function EditComponent(props) {
           <p>Loading...</p>
         )}
       </div>
-      <div>The HTML preview of the selected professor will appear here.</div>
+      <div dangerouslySetInnerHTML={{ __html: preview }}></div>
     </div>
   );
 }

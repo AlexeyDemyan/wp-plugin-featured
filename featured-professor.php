@@ -32,7 +32,16 @@ class FeaturedProfessor
   }
 
   function onInit()
-  {
+  { 
+    // registering meta data in the DB to be able to render posts where professors are mentioned
+    register_meta('post', 'featuredProfessor', array(
+      'show_in_rest' => true,
+      'type' => 'number',
+      // this is to prevent DB from unnecessarily serializing data
+      // and it will make separate entries in DB for separate professors
+      'single' => false
+    ));
+
     wp_register_script('featuredProfessorScript', plugin_dir_url(__FILE__) . 'build/index.js', array('wp-blocks', 'wp-i18n', 'wp-editor'));
     wp_register_style('featuredProfessorStyle', plugin_dir_url(__FILE__) . 'build/index.css');
 
