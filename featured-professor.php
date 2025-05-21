@@ -5,6 +5,8 @@
   Version: 1.0
   Author: Alex
   Author URI:
+  Text Domain: featured-professor
+  Domain Path: /languages
 */
 
 if (! defined('ABSPATH')) exit; // Exit if accessed directly
@@ -21,10 +23,12 @@ class FeaturedProfessor
     add_filter('the_content', [$this, 'addRelatedPosts']);
   }
 
-  function addRelatedPosts ($content) {
+  function addRelatedPosts($content)
+  {
     if (is_singular('professor') && in_the_loop() && is_main_query()) {
       return $content . relatedPostsHTML(get_the_ID());
-    } return $content;  
+    }
+    return $content;
   }
 
   function profHTML()
@@ -42,6 +46,8 @@ class FeaturedProfessor
 
   function onInit()
   {
+    load_plugin_textdomain('featured-professor', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
     // registering meta data in the DB to be able to render posts where professors are mentioned
     register_meta('post', 'featuredProfessor', array(
       'show_in_rest' => true,
@@ -53,6 +59,9 @@ class FeaturedProfessor
 
     wp_register_script('featuredProfessorScript', plugin_dir_url(__FILE__) . 'build/index.js', array('wp-blocks', 'wp-i18n', 'wp-editor'));
     wp_register_style('featuredProfessorStyle', plugin_dir_url(__FILE__) . 'build/index.css');
+
+    // This is important to connect translation of JS Script to the domain and hence translation:
+    wp_set_script_translations('featuredProfessorScript', 'featured-professor', plugin_dir_path(__FILE__) . '/languages');
 
     register_block_type('ourplugin/featured-professor', array(
       'render_callback' => [$this, 'renderCallback'],
