@@ -1,5 +1,7 @@
 import './index.scss';
 import { useSelect } from '@wordpress/data';
+import { useState, useEffect } from 'react';
+import apiFetch from '@wordpress/api-fetch';
 
 wp.blocks.registerBlockType('ourplugin/featured-professor', {
   title: 'Professor Callout',
@@ -19,6 +21,20 @@ wp.blocks.registerBlockType('ourplugin/featured-professor', {
 // This is sort of a wrapper around wp.data.select("core").getEntityRecords("postType", "professor", {per_page: -1})
 
 function EditComponent(props) {
+  const [preview, setPreview] = useState('');
+  useEffect(() => {
+    async function go() {
+      const response = await apiFetch({
+        path: `/featuredProfessor/v1/getHTML?profId=${props.attributes.profId}`,
+        method: 'GET',
+      });
+      setPreview(response);
+    }
+    go();
+  }, [props.attributes.profId]);
+
+  console.log(preview);
+
   const allProfs = useSelect((select) => {
     return select('core').getEntityRecords('postType', 'professor', {
       per_page: -1,
